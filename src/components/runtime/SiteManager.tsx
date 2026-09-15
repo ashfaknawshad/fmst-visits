@@ -35,29 +35,39 @@ export function SiteManager({
         📍 Sites
       </p>
       <div className="flex flex-wrap gap-2">
-        {sites.map((site) => (
-          <div key={site.id} className="flex items-center">
-            <button
-              type="button"
-              onClick={() => onSelect(site.id)}
-              className={`rounded-l-full rounded-r-full px-4 py-2 text-sm font-medium transition-colors ${
-                site.id === activeSiteId
-                  ? "bg-ocean-500 text-white"
-                  : "border border-border-soft bg-surface"
+        {sites.map((site) => {
+          const active = site.id === activeSiteId;
+          return (
+            <div
+              key={site.id}
+              className={`flex items-stretch overflow-hidden rounded-full border transition-colors ${
+                active ? "border-ocean-500 bg-ocean-500" : "border-border-soft bg-surface"
               }`}
             >
-              {site.label}
-            </button>
-            <button
-              type="button"
-              onClick={() => onRemove(site.id)}
-              aria-label={`Remove ${site.label}`}
-              className="-ml-2 text-slate-400"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
+              <button
+                type="button"
+                onClick={() => onSelect(site.id)}
+                className={`px-4 py-2 text-sm font-medium ${
+                  active ? "text-white" : "text-foreground"
+                }`}
+              >
+                {site.label}
+              </button>
+              <button
+                type="button"
+                onClick={() => onRemove(site.id)}
+                aria-label={`Remove ${site.label}`}
+                className={`px-3 py-2 text-sm ${
+                  active
+                    ? "text-white/70 active:bg-ocean-600"
+                    : "text-slate-400 active:bg-surface-muted"
+                }`}
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })}
 
         {!adding && (
           <button
