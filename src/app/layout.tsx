@@ -17,10 +17,17 @@ export const metadata: Metadata = {
   title: "Field Visit Tracker",
   description: "Offline-capable field data tracker for marine science field visits.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#14707f",
   viewportFit: "cover",
 };
 

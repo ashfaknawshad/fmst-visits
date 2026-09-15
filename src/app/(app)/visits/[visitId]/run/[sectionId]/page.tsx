@@ -51,7 +51,7 @@ export default async function RunSectionPage({
     <main className="mx-auto w-full max-w-xl flex-1 px-4 py-6">
       <Link
         href={`/visits/${visitId}/run`}
-        className="text-sm text-slate-500 underline underline-offset-2"
+        className="text-sm text-ocean-600 underline underline-offset-2 dark:text-ocean-300"
       >
         ← All sections
       </Link>

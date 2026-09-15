@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4faf9;
+  --foreground: #0f2a2e;
+
+  --color-ocean-50: #eefbfb;
+  --color-ocean-100: #d3f4f4;
+  --color-ocean-200: #a6e5e8;
+  --color-ocean-300: #6fcfd6;
+  --color-ocean-400: #3bb0bd;
+  --color-ocean-500: #1f8fa0;
+  --color-ocean-600: #14707f;
+  --color-ocean-700: #135a68;
+  --color-ocean-800: #144853;
+  --color-ocean-900: #0f2a2e;
+
+  --color-sand-50: #fffaf0;
+  --color-sand-100: #fdf1da;
+  --color-sand-200: #fbe2ae;
+  --color-sand-300: #f6cd7a;
+
+  --color-coral-400: #ff8a65;
+  --color-coral-500: #ff7043;
+
+  --color-seafoam-400: #7fd9c4;
+  --color-seafoam-500: #4fbfa6;
+
+  --surface: #ffffff;
+  --surface-muted: #eaf6f5;
+  --border-soft: #d3e9e6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border-soft: var(--border-soft);
+
+  --color-ocean-50: var(--color-ocean-50);
+  --color-ocean-100: var(--color-ocean-100);
+  --color-ocean-200: var(--color-ocean-200);
+  --color-ocean-300: var(--color-ocean-300);
+  --color-ocean-400: var(--color-ocean-400);
+  --color-ocean-500: var(--color-ocean-500);
+  --color-ocean-600: var(--color-ocean-600);
+  --color-ocean-700: var(--color-ocean-700);
+  --color-ocean-800: var(--color-ocean-800);
+  --color-ocean-900: var(--color-ocean-900);
+
+  --color-sand-50: var(--color-sand-50);
+  --color-sand-100: var(--color-sand-100);
+  --color-sand-200: var(--color-sand-200);
+  --color-sand-300: var(--color-sand-300);
+
+  --color-coral-400: var(--color-coral-400);
+  --color-coral-500: var(--color-coral-500);
+
+  --color-seafoam-400: var(--color-seafoam-400);
+  --color-seafoam-500: var(--color-seafoam-500);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0a1a1d;
+    --foreground: #e6f6f4;
+    --surface: #10262a;
+    --surface-muted: #123338;
+    --border-soft: #1c3d42;
+
+    --color-ocean-50: #0f2a2e;
+    --color-ocean-100: #144853;
+    --color-ocean-200: #135a68;
+    --color-ocean-300: #14707f;
+    --color-ocean-400: #1f8fa0;
+    --color-ocean-500: #3bb0bd;
+    --color-ocean-600: #6fcfd6;
+    --color-ocean-700: #a6e5e8;
+    --color-ocean-800: #d3f4f4;
+    --color-ocean-900: #eefbfb;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #0a1a1d;
+  --foreground: #e6f6f4;
+  --surface: #10262a;
+  --surface-muted: #123338;
+  --border-soft: #1c3d42;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translateX(-6%);
+  }
+  100% {
+    transform: translateX(6%);
+  }
+}
+
+.animate-bob {
+  animation: bob 2.6s ease-in-out infinite;
+}
+
+.animate-drift {
+  animation: drift 3.2s ease-in-out infinite alternate;
 }

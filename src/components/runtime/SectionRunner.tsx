@@ -329,7 +329,7 @@ export function SectionRunner({
               {siteItems.map((item) => renderItem(item, activeSiteId))}
             </div>
           ) : (
-            <p className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500 dark:border-slate-700">
+            <p className="rounded-xl border border-dashed border-border-soft p-4 text-sm text-slate-500">
               Add a site above to start recording data for it.
             </p>
           )}
@@ -339,7 +339,7 @@ export function SectionRunner({
       {visitItems.length > 0 && (
         <div className="space-y-4">
           {siteItems.length > 0 && (
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-semibold uppercase tracking-wide text-ocean-500">
               General
             </p>
           )}

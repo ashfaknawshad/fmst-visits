@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { FieldShell } from "./FieldShell";
+import { Button } from "@/components/ui/Button";
 import type { FieldVisitItem, PhotoConfig, SubmissionPhoto } from "@/types/visit";
 
 export function PhotoField({
@@ -51,11 +52,15 @@ export function PhotoField({
       helpText={item.help_text}
       required={item.is_required}
       answered={answered}
+      icon="📸"
     >
       {photos.length > 0 && (
         <div className="mb-3 grid grid-cols-3 gap-2">
           {photos.map((p) => (
-            <div key={p.id} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800">
+            <div
+              key={p.id}
+              className="relative aspect-square overflow-hidden rounded-lg bg-surface-muted"
+            >
               {photoUrls[p.id] ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={photoUrls[p.id]} alt="" className="h-full w-full object-cover" />
@@ -77,7 +82,7 @@ export function PhotoField({
         </div>
       )}
 
-      {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-2 text-sm text-coral-500">{error}</p>}
 
       {!atMax && (
         <>
@@ -89,14 +94,14 @@ export function PhotoField({
             onChange={handleFile}
             className="hidden"
           />
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            loading={uploading}
             onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className="w-full rounded-lg border border-slate-300 py-2.5 text-sm font-medium disabled:opacity-50 dark:border-slate-700"
           >
             {uploading ? "Uploading…" : "Add photo"}
-          </button>
+          </Button>
         </>
       )}
     </FieldShell>

@@ -6,6 +6,7 @@ import { isItemAnsweredForSite } from "@/lib/progress";
 import { formatAnswerValue } from "@/lib/formatAnswer";
 import { ensureSubmission } from "../run/actions";
 import { SubmitBar } from "@/components/runtime/SubmitBar";
+import { Card } from "@/components/ui/Card";
 import type { FieldVisitSubmission } from "@/types/visit";
 
 export default async function ReviewPage({
@@ -48,7 +49,7 @@ export default async function ReviewPage({
     <main className="mx-auto w-full max-w-xl flex-1 px-4 py-6">
       <Link
         href={`/visits/${visitId}/run`}
-        className="text-sm text-slate-500 underline underline-offset-2"
+        className="text-sm text-ocean-600 underline underline-offset-2 dark:text-ocean-300"
       >
         ← Back to sections
       </Link>
@@ -67,7 +68,7 @@ export default async function ReviewPage({
                 <h2 className="font-semibold">{section.title}</h2>
                 <Link
                   href={`/visits/${visitId}/run/${section.id}`}
-                  className="text-sm text-slate-500 underline underline-offset-2"
+                  className="text-sm text-ocean-600 underline underline-offset-2 dark:text-ocean-300"
                 >
                   Edit
                 </Link>
@@ -75,11 +76,8 @@ export default async function ReviewPage({
 
               {siteItems.length > 0 &&
                 sites.map((site) => (
-                  <div
-                    key={site.id}
-                    className="mb-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800"
-                  >
-                    <p className="mb-2 text-sm font-semibold text-slate-500">{site.label}</p>
+                  <Card key={site.id} className="mb-3">
+                    <p className="mb-2 text-sm font-semibold text-ocean-500">📍 {site.label}</p>
                     <dl className="space-y-1 text-sm">
                       {siteItems.map((item) => {
                         const answer = answers.find(
@@ -98,7 +96,7 @@ export default async function ReviewPage({
                         );
                       })}
                     </dl>
-                  </div>
+                  </Card>
                 ))}
 
               {siteItems.length > 0 && sites.length === 0 && (
@@ -106,7 +104,7 @@ export default async function ReviewPage({
               )}
 
               {visitItems.length > 0 && (
-                <dl className="space-y-1 rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+                <dl className="space-y-1 rounded-2xl border border-border-soft bg-surface p-3 text-sm shadow-sm">
                   {visitItems.map((item) => {
                     const answer = answers.find(
                       (a) => a.item_id === item.id && a.site_id === null,

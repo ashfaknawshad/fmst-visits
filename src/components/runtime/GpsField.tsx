@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FieldShell } from "./FieldShell";
+import { Button } from "@/components/ui/Button";
 import type { FieldVisitItem, GpsConfig } from "@/types/visit";
 
 export function GpsField({
@@ -58,33 +59,32 @@ export function GpsField({
       helpText={item.help_text}
       required={item.is_required}
       answered={answered}
+      icon="📍"
     >
       {lat != null && lng != null && (
         <p className="mb-2 text-sm">
           {lat.toFixed(6)}, {lng.toFixed(6)}
           {accuracy != null && (
-            <span
-              className={`ml-2 ${accuracyTooLow ? "text-amber-600 dark:text-amber-400" : "text-slate-500"}`}
-            >
+            <span className={`ml-2 ${accuracyTooLow ? "text-coral-500" : "text-slate-500"}`}>
               ±{accuracy.toFixed(0)}m
             </span>
           )}
         </p>
       )}
       {accuracyTooLow && (
-        <p className="mb-2 text-sm text-amber-600 dark:text-amber-400">
+        <p className="mb-2 text-sm text-coral-500">
           Accuracy is worse than {accuracyThreshold}m — try again in the open if possible.
         </p>
       )}
-      {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
-      <button
+      {error && <p className="mb-2 text-sm text-coral-500">{error}</p>}
+      <Button
         type="button"
+        variant="secondary"
         onClick={capture}
-        disabled={capturing}
-        className="w-full rounded-lg border border-slate-300 py-2.5 text-sm font-medium disabled:opacity-50 dark:border-slate-700"
+        loading={capturing}
       >
         {capturing ? "Capturing…" : lat != null ? "Recapture location" : "Capture location"}
-      </button>
+      </Button>
     </FieldShell>
   );
 }
