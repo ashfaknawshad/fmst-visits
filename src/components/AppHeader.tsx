@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NetworkStatusBadge } from "./NetworkStatusBadge";
+import { SyncStatusBadge } from "./SyncStatusBadge";
 import { SignOutButton } from "./SignOutButton";
 import { InstallPrompt } from "./InstallPrompt";
 import { WaveIcon } from "./illustrations/WaveIcon";
@@ -17,6 +18,7 @@ export function AppHeader() {
         </Link>
         <div className="flex items-center gap-3">
           <InstallPrompt />
+          <SyncStatusBadge />
           <NetworkStatusBadge />
           <SignOutButton />
         </div>

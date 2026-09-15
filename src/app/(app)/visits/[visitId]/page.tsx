@@ -63,18 +63,11 @@ export default async function VisitOverviewPage({
         </Card>
       )}
 
-      <ButtonLink
-        href={
-          submission?.status === "complete"
-            ? `/visits/${visit.id}/review`
-            : `/visits/${visit.id}/run`
-        }
-        className="mt-8"
-      >
+      <ButtonLink href={`/visits/${visit.id}/run`} className="mt-8">
         {submission?.status === "in_progress"
           ? "Continue"
           : submission?.status === "complete"
-            ? "Review"
+            ? "View"
             : "Start visit"}
       </ButtonLink>
     </main>

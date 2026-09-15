@@ -4,9 +4,6 @@ import type {
   FieldVisitFull,
   FieldVisitItem,
   FieldVisitSection,
-  SubmissionAnswer,
-  SubmissionPhoto,
-  SubmissionSite,
 } from "@/types/visit";
 
 export async function getFieldVisitFull(
@@ -52,39 +49,5 @@ export async function getFieldVisitFull(
       ...s,
       items: itemsBySection.get(s.id) ?? [],
     })),
-  };
-}
-
-export async function getSubmissionData(
-  supabase: SupabaseClient,
-  submissionId: string,
-): Promise<{
-  sites: SubmissionSite[];
-  answers: SubmissionAnswer[];
-  photos: SubmissionPhoto[];
-}> {
-  const [{ data: sites }, { data: answers }, { data: photos }] = await Promise.all([
-    supabase
-      .from("submission_sites")
-      .select("*")
-      .eq("submission_id", submissionId)
-      .order("order_index")
-      .returns<SubmissionSite[]>(),
-    supabase
-      .from("submission_answers")
-      .select("*")
-      .eq("submission_id", submissionId)
-      .returns<SubmissionAnswer[]>(),
-    supabase
-      .from("submission_photos")
-      .select("*")
-      .eq("submission_id", submissionId)
-      .returns<SubmissionPhoto[]>(),
-  ]);
-
-  return {
-    sites: sites ?? [],
-    answers: answers ?? [],
-    photos: photos ?? [],
   };
 }

@@ -7,11 +7,23 @@ import type {
   SubmissionSite,
 } from "@/types/visit";
 
-interface SyncQueueEntry {
+export type LocalSubmission = FieldVisitSubmission & { dirty: boolean };
+export type LocalSite = SubmissionSite & { dirty: boolean };
+/**
+ * local_key is a deterministic string ("submissionId:itemId:siteId|visit") used as the
+ * IndexedDB primary key, so repeated saves to the same (submission, item, site) always
+ * overwrite the same local record. `id` is a real UUID, generated once on first save and
+ * reused for every later update — it's what gets written as the row's primary key in
+ * Supabase, so sync is a plain upsert-by-id with no local/remote id remapping.
+ */
+export type LocalAnswer = SubmissionAnswer & { dirty: boolean; local_key: string };
+export type LocalPhoto = SubmissionPhoto & { dirty: boolean; blob: Blob };
+
+export interface PendingDelete {
   id: string;
-  table: "submission_answers" | "submission_photos" | "submission_sites" | "field_visit_submissions";
+  table: "submission_sites" | "submission_photos";
   recordId: string;
-  createdAt: string;
+  storagePath?: string;
 }
 
 interface FieldVisitTrackerDB extends DBSchema {
@@ -21,26 +33,27 @@ interface FieldVisitTrackerDB extends DBSchema {
   };
   submissions: {
     key: string;
-    value: FieldVisitSubmission;
+    value: LocalSubmission;
+    indexes: { "by-visit": string };
   };
   sites: {
     key: string;
-    value: SubmissionSite;
+    value: LocalSite;
     indexes: { "by-submission": string };
   };
   answers: {
     key: string;
-    value: SubmissionAnswer & { dirty: boolean };
+    value: LocalAnswer;
     indexes: { "by-submission": string };
   };
   photos: {
     key: string;
-    value: SubmissionPhoto & { dirty: boolean; blob?: Blob };
+    value: LocalPhoto;
     indexes: { "by-submission": string };
   };
-  sync_queue: {
+  pending_deletes: {
     key: string;
-    value: SyncQueueEntry;
+    value: PendingDelete;
   };
 }
 
@@ -51,20 +64,27 @@ export function getDB() {
     dbPromise = openDB<FieldVisitTrackerDB>("field-visit-tracker", 1, {
       upgrade(db) {
         db.createObjectStore("visits", { keyPath: "id" });
-        db.createObjectStore("submissions", { keyPath: "id" });
+
+        const submissions = db.createObjectStore("submissions", { keyPath: "id" });
+        submissions.createIndex("by-visit", "field_visit_id");
 
         const sites = db.createObjectStore("sites", { keyPath: "id" });
         sites.createIndex("by-submission", "submission_id");
 
-        const answers = db.createObjectStore("answers", { keyPath: "id" });
+        const answers = db.createObjectStore("answers", { keyPath: "local_key" });
         answers.createIndex("by-submission", "submission_id");
 
         const photos = db.createObjectStore("photos", { keyPath: "id" });
         photos.createIndex("by-submission", "submission_id");
 
-        db.createObjectStore("sync_queue", { keyPath: "id" });
+        db.createObjectStore("pending_deletes", { keyPath: "id" });
       },
     });
   }
   return dbPromise;
+}
+
+/** Stable local key so repeated saves to the same (submission,item,site) overwrite in place. */
+export function answerKey(submissionId: string, itemId: string, siteId: string | null) {
+  return `${submissionId}:${itemId}:${siteId ?? "visit"}`;
 }

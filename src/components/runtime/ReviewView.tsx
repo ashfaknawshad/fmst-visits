@@ -1,44 +1,44 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getFieldVisitFull, getSubmissionData } from "@/lib/visits";
-import { isItemAnsweredForSite } from "@/lib/progress";
 import { formatAnswerValue } from "@/lib/formatAnswer";
-import { ensureSubmission } from "../run/actions";
-import { SubmitBar } from "@/components/runtime/SubmitBar";
-import { StreamProfileChart } from "@/components/runtime/StreamProfileChart";
+import { isItemAnsweredForSite } from "@/lib/progress";
 import { Card } from "@/components/ui/Card";
-import type { CrossSectionConfig, CrossSectionPoint, FieldVisitSubmission } from "@/types/visit";
+import { SubmitBar } from "./SubmitBar";
+import { StreamProfileChart } from "./StreamProfileChart";
+import type {
+  CrossSectionConfig,
+  CrossSectionPoint,
+  FieldVisitFull,
+  FieldVisitSubmission,
+  SubmissionAnswer,
+  SubmissionPhoto,
+  SubmissionSite,
+} from "@/types/visit";
 
-export default async function ReviewPage({
-  params,
+export function ReviewView({
+  visit,
+  submission,
+  sites,
+  answers,
+  photos,
+  onEditSection,
+  onMarkComplete,
+  onReopen,
 }: {
-  params: Promise<{ visitId: string }>;
+  visit: FieldVisitFull;
+  submission: FieldVisitSubmission;
+  sites: SubmissionSite[];
+  answers: SubmissionAnswer[];
+  photos: SubmissionPhoto[];
+  onEditSection: (sectionId: string) => void;
+  onMarkComplete: () => void;
+  onReopen: () => void;
 }) {
-  const { visitId } = await params;
-  const supabase = await createClient();
-
-  const visit = await getFieldVisitFull(supabase, visitId);
-  if (!visit) notFound();
-
-  const submissionId = await ensureSubmission(visitId);
-  const { data: submission } = await supabase
-    .from("field_visit_submissions")
-    .select("*")
-    .eq("id", submissionId)
-    .single<FieldVisitSubmission>();
-
-  const { sites, answers, photos } = await getSubmissionData(supabase, submissionId);
-
   let incompleteRequiredCount = 0;
   for (const section of visit.sections) {
     for (const item of section.items) {
       if (!item.is_required) continue;
       if (item.repeat_scope === "site") {
         for (const site of sites) {
-          if (!isItemAnsweredForSite(item, site.id, answers, photos)) {
-            incompleteRequiredCount += 1;
-          }
+          if (!isItemAnsweredForSite(item, site.id, answers, photos)) incompleteRequiredCount += 1;
         }
       } else if (!isItemAnsweredForSite(item, null, answers, photos)) {
         incompleteRequiredCount += 1;
@@ -47,15 +47,8 @@ export default async function ReviewPage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-xl flex-1 px-4 py-6">
-      <Link
-        href={`/visits/${visitId}/run`}
-        className="text-sm text-ocean-600 underline underline-offset-2 dark:text-ocean-300"
-      >
-        ← Back to sections
-      </Link>
-
-      <h1 className="mt-3 text-2xl font-semibold">Review</h1>
+    <div>
+      <h1 className="text-2xl font-semibold">Review</h1>
       <p className="mt-1 text-sm text-slate-500">{visit.title}</p>
 
       <div className="mt-6 space-y-6">
@@ -67,12 +60,13 @@ export default async function ReviewPage({
             <section key={section.id}>
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="font-semibold">{section.title}</h2>
-                <Link
-                  href={`/visits/${visitId}/run/${section.id}`}
+                <button
+                  type="button"
+                  onClick={() => onEditSection(section.id)}
                   className="text-sm text-ocean-600 underline underline-offset-2 dark:text-ocean-300"
                 >
                   Edit
-                </Link>
+                </button>
               </div>
 
               {siteItems.length > 0 &&
@@ -109,9 +103,7 @@ export default async function ReviewPage({
                         const config = item.config as unknown as CrossSectionConfig;
                         return (
                           <div key={item.id} className="mt-3">
-                            <p className="mb-1 text-xs font-medium text-slate-500">
-                              {item.label}
-                            </p>
+                            <p className="mb-1 text-xs font-medium text-slate-500">{item.label}</p>
                             <StreamProfileChart
                               points={(answer?.value as CrossSectionPoint[]) ?? []}
                               distanceUnit={config.distance_unit}
@@ -154,14 +146,12 @@ export default async function ReviewPage({
         })}
       </div>
 
-      {submission && (
-        <SubmitBar
-          visitId={visitId}
-          submissionId={submissionId}
-          status={submission.status}
-          incompleteRequiredCount={incompleteRequiredCount}
-        />
-      )}
-    </main>
+      <SubmitBar
+        status={submission.status}
+        incompleteRequiredCount={incompleteRequiredCount}
+        onMarkComplete={onMarkComplete}
+        onReopen={onReopen}
+      />
+    </div>
   );
 }

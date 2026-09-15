@@ -1,23 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { markSubmissionComplete, reopenSubmission } from "@/app/(app)/visits/[visitId]/run/actions";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 
 export function SubmitBar({
-  visitId,
-  submissionId,
   status,
   incompleteRequiredCount,
+  onMarkComplete,
+  onReopen,
 }: {
-  visitId: string;
-  submissionId: string;
   status: string;
   incompleteRequiredCount: number;
+  onMarkComplete: () => void;
+  onReopen: () => void;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
 
   if (status === "complete") {
@@ -26,16 +22,7 @@ export function SubmitBar({
         <p className="text-center text-sm text-seafoam-500">
           🎉 This visit is marked complete. You can still edit any answer.
         </p>
-        <Button
-          variant="secondary"
-          loading={isPending}
-          onClick={() =>
-            startTransition(async () => {
-              await reopenSubmission(submissionId, visitId);
-              router.refresh();
-            })
-          }
-        >
+        <Button variant="secondary" onClick={onReopen}>
           Reopen
         </Button>
       </div>
@@ -50,16 +37,12 @@ export function SubmitBar({
         </p>
       )}
       <Button
-        loading={isPending}
         onClick={() => {
           if (incompleteRequiredCount > 0 && !confirming) {
             setConfirming(true);
             return;
           }
-          startTransition(async () => {
-            await markSubmissionComplete(submissionId, visitId);
-            router.refresh();
-          });
+          onMarkComplete();
         }}
       >
         {confirming ? "Submit anyway" : "Mark complete"}

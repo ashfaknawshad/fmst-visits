@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { isItemAnsweredForSite } from "@/lib/progress";
 import { SiteManager } from "./SiteManager";
 import {
@@ -23,219 +21,49 @@ import type {
 } from "@/types/visit";
 
 export function SectionRunner({
-  submissionId,
   items,
-  initialSites,
-  initialAnswers,
-  initialPhotos,
-  initialPhotoUrls,
+  sites,
+  answers,
+  photos,
+  photoUrls,
+  uploadingKeys,
+  activeSiteId,
+  onSelectSite,
+  onAddSite,
+  onRemoveSite,
+  onSaveValue,
+  onSaveGps,
+  onAddPhoto,
+  onRemovePhoto,
 }: {
-  visitId: string;
-  submissionId: string;
   items: FieldVisitItem[];
-  initialSites: SubmissionSite[];
-  initialAnswers: SubmissionAnswer[];
-  initialPhotos: SubmissionPhoto[];
-  initialPhotoUrls: Record<string, string>;
+  sites: SubmissionSite[];
+  answers: SubmissionAnswer[];
+  photos: SubmissionPhoto[];
+  photoUrls: Record<string, string>;
+  uploadingKeys: Set<string>;
+  activeSiteId: string | null;
+  onSelectSite: (siteId: string) => void;
+  onAddSite: (label: string) => void;
+  onRemoveSite: (siteId: string) => void;
+  onSaveValue: (
+    itemId: string,
+    siteId: string | null,
+    value: Record<string, unknown> | SpeciesListRow[] | CrossSectionPoint[],
+  ) => void;
+  onSaveGps: (
+    itemId: string,
+    siteId: string | null,
+    fix: { lat: number; lng: number; accuracy: number; capturedAt: string },
+  ) => void;
+  onAddPhoto: (itemId: string, siteId: string | null, file: File) => void;
+  onRemovePhoto: (photoId: string) => void;
 }) {
-  const supabase = createClient();
-
-  const [sites, setSites] = useState(initialSites);
-  const [activeSiteId, setActiveSiteId] = useState<string | null>(
-    initialSites[0]?.id ?? null,
-  );
-  const [answers, setAnswers] = useState(initialAnswers);
-  const [photos, setPhotos] = useState(initialPhotos);
-  const [photoUrls, setPhotoUrls] = useState(initialPhotoUrls);
-  const [uploading, setUploading] = useState<Set<string>>(new Set());
-
   const siteItems = items.filter((i) => i.repeat_scope === "site");
   const visitItems = items.filter((i) => i.repeat_scope === "visit");
 
   function findAnswer(itemId: string, siteId: string | null) {
-    return answers.find(
-      (a) => a.item_id === itemId && (a.site_id ?? null) === siteId,
-    );
-  }
-
-  async function saveValue(
-    itemId: string,
-    siteId: string | null,
-    value: Record<string, unknown> | SpeciesListRow[] | CrossSectionPoint[],
-  ) {
-    const { data, error } = await supabase
-      .from("submission_answers")
-      .upsert(
-        {
-          submission_id: submissionId,
-          item_id: itemId,
-          site_id: siteId,
-          value,
-          client_updated_at: new Date().toISOString(),
-        },
-        { onConflict: "submission_id,item_id,site_id" },
-      )
-      .select("*")
-      .single<SubmissionAnswer>();
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setAnswers((prev) => {
-      const idx = prev.findIndex(
-        (a) => a.item_id === itemId && (a.site_id ?? null) === siteId,
-      );
-      if (idx === -1) return [...prev, data];
-      const next = [...prev];
-      next[idx] = data;
-      return next;
-    });
-  }
-
-  async function saveGps(
-    itemId: string,
-    siteId: string | null,
-    fix: { lat: number; lng: number; accuracy: number; capturedAt: string },
-  ) {
-    const { data, error } = await supabase
-      .from("submission_answers")
-      .upsert(
-        {
-          submission_id: submissionId,
-          item_id: itemId,
-          site_id: siteId,
-          value: {},
-          gps_lat: fix.lat,
-          gps_lng: fix.lng,
-          gps_accuracy_m: fix.accuracy,
-          gps_captured_at: fix.capturedAt,
-          client_updated_at: new Date().toISOString(),
-        },
-        { onConflict: "submission_id,item_id,site_id" },
-      )
-      .select("*")
-      .single<SubmissionAnswer>();
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setAnswers((prev) => {
-      const idx = prev.findIndex(
-        (a) => a.item_id === itemId && (a.site_id ?? null) === siteId,
-      );
-      if (idx === -1) return [...prev, data];
-      const next = [...prev];
-      next[idx] = data;
-      return next;
-    });
-
-    if (siteId) {
-      await supabase
-        .from("submission_sites")
-        .update({ gps_lat: fix.lat, gps_lng: fix.lng })
-        .eq("id", siteId);
-    }
-  }
-
-  async function addSite(label: string) {
-    const { data, error } = await supabase
-      .from("submission_sites")
-      .insert({ submission_id: submissionId, label, order_index: sites.length })
-      .select("*")
-      .single<SubmissionSite>();
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setSites((prev) => [...prev, data]);
-    setActiveSiteId(data.id);
-  }
-
-  async function removeSite(siteId: string) {
-    if (!confirm("Remove this site and all data recorded for it?")) return;
-
-    const { error } = await supabase.from("submission_sites").delete().eq("id", siteId);
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setSites((prev) => prev.filter((s) => s.id !== siteId));
-    setAnswers((prev) => prev.filter((a) => a.site_id !== siteId));
-    setPhotos((prev) => prev.filter((p) => p.site_id !== siteId));
-    setActiveSiteId((prev) => (prev === siteId ? null : prev));
-  }
-
-  async function addPhoto(itemId: string, siteId: string | null, file: File) {
-    const key = `${itemId}:${siteId ?? "visit"}`;
-    setUploading((prev) => new Set(prev).add(key));
-
-    const ext = file.name.split(".").pop() || "jpg";
-    const clientLocalId = crypto.randomUUID();
-    const path = `${submissionId}/${clientLocalId}.${ext}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("field-photos")
-      .upload(path, file);
-
-    if (uploadError) {
-      setUploading((prev) => {
-        const next = new Set(prev);
-        next.delete(key);
-        return next;
-      });
-      alert(uploadError.message);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("submission_photos")
-      .insert({
-        submission_id: submissionId,
-        item_id: itemId,
-        site_id: siteId,
-        storage_path: path,
-        client_local_id: clientLocalId,
-        taken_at: new Date().toISOString(),
-      })
-      .select("*")
-      .single<SubmissionPhoto>();
-
-    setUploading((prev) => {
-      const next = new Set(prev);
-      next.delete(key);
-      return next;
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setPhotos((prev) => [...prev, data]);
-
-    const { data: signed } = await supabase.storage
-      .from("field-photos")
-      .createSignedUrl(path, 3600);
-    if (signed?.signedUrl) {
-      setPhotoUrls((prev) => ({ ...prev, [data.id]: signed.signedUrl }));
-    }
-  }
-
-  async function removePhoto(photoId: string) {
-    const photo = photos.find((p) => p.id === photoId);
-    if (!photo) return;
-
-    await supabase.storage.from("field-photos").remove([photo.storage_path]);
-    await supabase.from("submission_photos").delete().eq("id", photoId);
-
-    setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    return answers.find((a) => a.item_id === itemId && (a.site_id ?? null) === siteId);
   }
 
   function renderItem(item: FieldVisitItem, siteId: string | null) {
@@ -250,7 +78,7 @@ export function SectionRunner({
             item={item}
             value={(answer?.value as Record<string, unknown>) ?? {}}
             answered={answered}
-            onSave={(v) => saveValue(item.id, siteId, v)}
+            onSave={(v) => onSaveValue(item.id, siteId, v)}
           />
         );
       case "observation":
@@ -260,7 +88,7 @@ export function SectionRunner({
             item={item}
             value={(answer?.value as Record<string, unknown>) ?? {}}
             answered={answered}
-            onSave={(v) => saveValue(item.id, siteId, v)}
+            onSave={(v) => onSaveValue(item.id, siteId, v)}
           />
         );
       case "checklist":
@@ -270,7 +98,7 @@ export function SectionRunner({
             item={item}
             value={(answer?.value as Record<string, unknown>) ?? {}}
             answered={answered}
-            onSave={(v) => saveValue(item.id, siteId, v)}
+            onSave={(v) => onSaveValue(item.id, siteId, v)}
           />
         );
       case "species_list":
@@ -280,7 +108,7 @@ export function SectionRunner({
             item={item}
             value={(answer?.value as SpeciesListRow[]) ?? []}
             answered={answered}
-            onSave={(v) => saveValue(item.id, siteId, v)}
+            onSave={(v) => onSaveValue(item.id, siteId, v)}
           />
         );
       case "cross_section":
@@ -290,7 +118,7 @@ export function SectionRunner({
             item={item}
             value={(answer?.value as CrossSectionPoint[]) ?? []}
             answered={answered}
-            onSave={(v) => saveValue(item.id, siteId, v)}
+            onSave={(v) => onSaveValue(item.id, siteId, v)}
           />
         );
       case "gps":
@@ -302,7 +130,7 @@ export function SectionRunner({
             lng={answer?.gps_lng ?? null}
             accuracy={answer?.gps_accuracy_m ?? null}
             answered={answered}
-            onSave={(fix) => saveGps(item.id, siteId, fix)}
+            onSave={(fix) => onSaveGps(item.id, siteId, fix)}
           />
         );
       case "photo": {
@@ -315,9 +143,9 @@ export function SectionRunner({
             item={item}
             photos={itemPhotos}
             photoUrls={photoUrls}
-            uploading={uploading.has(`${item.id}:${siteId ?? "visit"}`)}
-            onAdd={(file) => addPhoto(item.id, siteId, file)}
-            onRemove={removePhoto}
+            uploading={uploadingKeys.has(`${item.id}:${siteId ?? "visit"}`)}
+            onAdd={(file) => onAddPhoto(item.id, siteId, file)}
+            onRemove={onRemovePhoto}
           />
         );
       }
@@ -331,9 +159,9 @@ export function SectionRunner({
           <SiteManager
             sites={sites}
             activeSiteId={activeSiteId}
-            onSelect={setActiveSiteId}
-            onAdd={addSite}
-            onRemove={removeSite}
+            onSelect={onSelectSite}
+            onAdd={onAddSite}
+            onRemove={onRemoveSite}
           />
 
           {activeSiteId ? (
