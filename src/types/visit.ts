@@ -5,7 +5,8 @@ export type ItemType =
   | "checklist"
   | "photo"
   | "gps"
-  | "species_list";
+  | "species_list"
+  | "cross_section";
 export type RepeatScope = "visit" | "site";
 export type SubmissionStatus = "in_progress" | "complete";
 
@@ -56,13 +57,20 @@ export interface SpeciesListConfig {
 
 export type ChecklistConfig = Record<string, never>;
 
+export interface CrossSectionConfig {
+  distance_unit?: string;
+  depth_unit?: string;
+  min_points?: number;
+}
+
 export type ItemConfig =
   | { item_type: "measurement"; config: MeasurementConfig }
   | { item_type: "observation"; config: ObservationConfig }
   | { item_type: "photo"; config: PhotoConfig }
   | { item_type: "gps"; config: GpsConfig }
   | { item_type: "species_list"; config: SpeciesListConfig }
-  | { item_type: "checklist"; config: ChecklistConfig };
+  | { item_type: "checklist"; config: ChecklistConfig }
+  | { item_type: "cross_section"; config: CrossSectionConfig };
 
 export interface FieldVisitItem {
   id: string;
@@ -102,12 +110,17 @@ export interface SpeciesListRow {
   notes?: string;
 }
 
+export interface CrossSectionPoint {
+  distance: number;
+  depth: number;
+}
+
 export interface SubmissionAnswer {
   id: string;
   submission_id: string;
   item_id: string;
   site_id: string | null;
-  value: Record<string, unknown> | SpeciesListRow[];
+  value: Record<string, unknown> | SpeciesListRow[] | CrossSectionPoint[];
   gps_lat: number | null;
   gps_lng: number | null;
   gps_accuracy_m: number | null;

@@ -6,8 +6,9 @@ import { isItemAnsweredForSite } from "@/lib/progress";
 import { formatAnswerValue } from "@/lib/formatAnswer";
 import { ensureSubmission } from "../run/actions";
 import { SubmitBar } from "@/components/runtime/SubmitBar";
+import { StreamProfileChart } from "@/components/runtime/StreamProfileChart";
 import { Card } from "@/components/ui/Card";
-import type { FieldVisitSubmission } from "@/types/visit";
+import type { CrossSectionConfig, CrossSectionPoint, FieldVisitSubmission } from "@/types/visit";
 
 export default async function ReviewPage({
   params,
@@ -75,29 +76,54 @@ export default async function ReviewPage({
               </div>
 
               {siteItems.length > 0 &&
-                sites.map((site) => (
-                  <Card key={site.id} className="mb-3">
-                    <p className="mb-2 text-sm font-semibold text-ocean-500">📍 {site.label}</p>
-                    <dl className="space-y-1 text-sm">
-                      {siteItems.map((item) => {
+                sites.map((site) => {
+                  const chartItems = siteItems.filter((i) => i.item_type === "cross_section");
+                  const otherItems = siteItems.filter((i) => i.item_type !== "cross_section");
+
+                  return (
+                    <Card key={site.id} className="mb-3">
+                      <p className="mb-2 text-sm font-semibold text-ocean-500">📍 {site.label}</p>
+                      <dl className="space-y-1 text-sm">
+                        {otherItems.map((item) => {
+                          const answer = answers.find(
+                            (a) => a.item_id === item.id && a.site_id === site.id,
+                          );
+                          const itemPhotos = photos.filter(
+                            (p) => p.item_id === item.id && p.site_id === site.id,
+                          );
+                          return (
+                            <div key={item.id} className="flex justify-between gap-2">
+                              <dt className="text-slate-500">{item.label}</dt>
+                              <dd className="text-right">
+                                {formatAnswerValue(item, answer, itemPhotos)}
+                              </dd>
+                            </div>
+                          );
+                        })}
+                      </dl>
+
+                      {chartItems.map((item) => {
                         const answer = answers.find(
                           (a) => a.item_id === item.id && a.site_id === site.id,
                         );
-                        const itemPhotos = photos.filter(
-                          (p) => p.item_id === item.id && p.site_id === site.id,
-                        );
+                        const config = item.config as unknown as CrossSectionConfig;
                         return (
-                          <div key={item.id} className="flex justify-between gap-2">
-                            <dt className="text-slate-500">{item.label}</dt>
-                            <dd className="text-right">
-                              {formatAnswerValue(item, answer, itemPhotos)}
-                            </dd>
+                          <div key={item.id} className="mt-3">
+                            <p className="mb-1 text-xs font-medium text-slate-500">
+                              {item.label}
+                            </p>
+                            <StreamProfileChart
+                              points={(answer?.value as CrossSectionPoint[]) ?? []}
+                              distanceUnit={config.distance_unit}
+                              depthUnit={config.depth_unit}
+                              className="w-full"
+                            />
                           </div>
                         );
                       })}
-                    </dl>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
 
               {siteItems.length > 0 && sites.length === 0 && (
                 <p className="text-sm text-slate-500">No sites added yet.</p>

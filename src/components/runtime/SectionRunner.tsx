@@ -12,7 +12,9 @@ import {
 } from "./ItemFields";
 import { GpsField } from "./GpsField";
 import { PhotoField } from "./PhotoField";
+import { CrossSectionField } from "./CrossSectionField";
 import type {
+  CrossSectionPoint,
   FieldVisitItem,
   SpeciesListRow,
   SubmissionAnswer,
@@ -59,7 +61,7 @@ export function SectionRunner({
   async function saveValue(
     itemId: string,
     siteId: string | null,
-    value: Record<string, unknown> | SpeciesListRow[],
+    value: Record<string, unknown> | SpeciesListRow[] | CrossSectionPoint[],
   ) {
     const { data, error } = await supabase
       .from("submission_answers")
@@ -277,6 +279,16 @@ export function SectionRunner({
             key={item.id}
             item={item}
             value={(answer?.value as SpeciesListRow[]) ?? []}
+            answered={answered}
+            onSave={(v) => saveValue(item.id, siteId, v)}
+          />
+        );
+      case "cross_section":
+        return (
+          <CrossSectionField
+            key={item.id}
+            item={item}
+            value={(answer?.value as CrossSectionPoint[]) ?? []}
             answered={answered}
             onSave={(v) => saveValue(item.id, siteId, v)}
           />

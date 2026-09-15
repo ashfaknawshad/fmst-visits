@@ -1,4 +1,10 @@
-import type { FieldVisitItem, SpeciesListRow, SubmissionAnswer, SubmissionPhoto } from "@/types/visit";
+import type {
+  CrossSectionPoint,
+  FieldVisitItem,
+  SpeciesListRow,
+  SubmissionAnswer,
+  SubmissionPhoto,
+} from "@/types/visit";
 
 export function formatAnswerValue(
   item: FieldVisitItem,
@@ -22,6 +28,13 @@ export function formatAnswerValue(
     return rows
       .map((r) => `${r.taxon_name || "?"}${r.density != null ? ` (${r.density})` : ""}`)
       .join(", ");
+  }
+
+  if (item.item_type === "cross_section") {
+    const points = (answer?.value as CrossSectionPoint[]) ?? [];
+    if (!points.length) return "—";
+    const deepest = points.reduce((max, p) => (p.depth > max.depth ? p : max), points[0]);
+    return `${points.length} points, deepest ${deepest.depth}m`;
   }
 
   if (item.item_type === "checklist") {

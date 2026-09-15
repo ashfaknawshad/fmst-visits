@@ -1,4 +1,6 @@
 import type {
+  CrossSectionConfig,
+  CrossSectionPoint,
   FieldVisitItem,
   MeasurementConfig,
   PhotoConfig,
@@ -33,6 +35,14 @@ export function isItemAnsweredForSite(
 
   if (item.item_type === "species_list") {
     return Array.isArray(answer.value) && (answer.value as SpeciesListRow[]).length > 0;
+  }
+
+  if (item.item_type === "cross_section") {
+    const config = item.config as unknown as CrossSectionConfig;
+    const minPoints = config.min_points ?? 2;
+    return (
+      Array.isArray(answer.value) && (answer.value as CrossSectionPoint[]).length >= minPoints
+    );
   }
 
   const value = (answer.value as Record<string, unknown>) ?? {};
