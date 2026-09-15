@@ -56,7 +56,11 @@ export default async function VisitOverviewPage({
       )}
 
       <Link
-        href={`/visits/${visit.id}/run`}
+        href={
+          submission?.status === "complete"
+            ? `/visits/${visit.id}/review`
+            : `/visits/${visit.id}/run`
+        }
         className="mt-8 block w-full rounded-lg bg-slate-900 px-4 py-3 text-center text-base font-medium text-white dark:bg-slate-100 dark:text-slate-900"
       >
         {submission?.status === "in_progress"
